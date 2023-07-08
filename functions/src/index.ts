@@ -1,28 +1,23 @@
 import * as functions from "firebase-functions";
-import { defineString } from "firebase-functions/params";
 import * as admin from "firebase-admin";
+import { HelloProjectBot } from "./lib/helloProjectBot";
+import { bulkInsert } from "./lib/firestore";
 
 admin.initializeApp(functions.config().firebase);
 
 const db = admin.firestore();
+const helloProjectOfficialNewsRef = db
+  .collection("v1")
+  .doc("helloProjectOfficialNews")
+  .collection("all");
 
-export const helloWorld = functions.pubsub
-  .schedule("every 5 minutes")
-  .onRun((context) => {
-    const env = defineString("MY_ENV");
-    console.log(`Hello ${env.value()}!`);
+export const scrapingJob = functions.pubsub
+  .schedule("every 60 minutes")
+  .onRun(async (_) => {
+    const scrapingHelloProjectOfficialNews = async () => {
+      const news = await HelloProjectBot.scrapingOfficialNews();
+      await bulkInsert(helloProjectOfficialNewsRef, news);
+    };
 
-    const ref = db.collection("test");
-    ref
-      .doc("rYkC9z5f3t7DjN7qdDfQ")
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          console.log(doc.data());
-        } else {
-          console.log("No such document!");
-        }
-      });
-
-    return null;
+    await Promise.all([scrapingHelloProjectOfficialNews()]);
   });
