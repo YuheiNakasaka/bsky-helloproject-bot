@@ -33,3 +33,16 @@ export const bulkInsert = async (
     }),
   ]);
 };
+
+export const getUntweetedItem = async (
+  collectionRef: FirebaseFirestore.CollectionReference
+): Promise<FirebaseFirestore.QuerySnapshot> => {
+  return await collectionRef.where("tweeted", "==", false).limit(1).get();
+};
+
+export const updateTweetedFlag = async (
+  doc: FirebaseFirestore.QueryDocumentSnapshot,
+  tweeted: boolean
+): Promise<void> => {
+  await doc.ref.update({ tweeted });
+};
